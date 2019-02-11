@@ -22,3 +22,8 @@ def getPSD(deltaF, npts, psd="SimNoisePSDaLIGOZeroDetHighPowerPtr"):
     output = np.vstack((freq, lalseries.data.data)).T
 
     return output
+
+
+
+def foo():
+	pass
