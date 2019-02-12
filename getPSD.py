@@ -23,7 +23,3 @@ def getPSD(deltaF, npts, psd="SimNoisePSDaLIGOZeroDetHighPowerPtr"):
 
     return output
 
-
-
-def foo():
-	pass
