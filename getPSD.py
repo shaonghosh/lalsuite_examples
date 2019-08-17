@@ -7,6 +7,11 @@ import lalsimulation as lalsim
 
 def getPSD(deltaF, npts, psd="SimNoisePSDaLIGOZeroDetHighPowerPtr"):
     """
+    This function accepts a frequency step-size and number of frequency points. 
+    It then computes from there the noise PSD for ligo. The default psd is 
+    SimNoisePSDaLIGOZeroDetHighPowerPtr which can be changed using the argument
+    psd.
+
     deltaF :: The frequency interval between data points.
     npts   :: Total number of date points
     psd    :: The noise model in lalsimulation. To get info use
