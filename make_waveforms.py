@@ -19,6 +19,7 @@ def make_tidal_waveform(approx='TaylorT4', T=4096, Lambda1=None, Lambda2=None,
         Lambda2 = 0.0
     mass1 = mass1*lal.MSUN_SI
     mass2 = mass2*lal.MSUN_SI
+    distance = distance * 1e6 * lal.PC_SI
     deltaT = 1.0/T
     approximant = lalsim.GetApproximantFromString(approx)
     lal_pars = lal.CreateDict()
@@ -37,6 +38,15 @@ def make_tidal_waveform(approx='TaylorT4', T=4096, Lambda1=None, Lambda2=None,
                                                 approximant=approximant)
 
     return (hp, hc)
+
+def make_waveform_plot(hp, hc):
+    tstart = hp.epoch.gpsSeconds + hp.epoch.gpsNanoSeconds*1e-9
+    t = np.arange(tstart, 0, hp.deltaT)
+    t = t[:len(hp.data.data)]
+    pl.plot(t, hp.data.data, 'r-')
+    pl.xlabel('Time (s)')
+    pl.ylabel('Gravitational wave strain')
+    pl.show()
 
 
 
