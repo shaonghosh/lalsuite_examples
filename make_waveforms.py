@@ -9,7 +9,7 @@ def make_tidal_waveform(approx='TaylorT4', rate=4096, Lambda1=None, Lambda2=None
                         mass1=1.4, mass2=1.3, inclination=0, distance=100,
                         eccentricity=0, meanPerAno=0, phiRef=0, f_min=30,
                         f_ref=0, longAscNodes=0, s1x=0, s1y=0, s1z=0, s2x=0,
-                        s2y=0, s2z=0, eos=None):
+                        s2y=0, s2z=0, eos=None, save=False):
     # Sanity check
     if (Lambda1 is None) and (Lambda2 is None) and (eos is None):
         # Assuming Lambdas to be zero is not provided
@@ -57,6 +57,23 @@ def make_tidal_waveform(approx='TaylorT4', rate=4096, Lambda1=None, Lambda2=None
                                                 deltaT=deltaT, f_min=f_min,
                                                 f_ref=f_ref, params=lal_pars,
                                                 approximant=approximant)
+    if save:
+        plus_data = hp.data.data
+        cross_data = hc.data.data
+        tstart_p = hp.epoch.gpsSeconds + hp.epoch.gpsNanoSeconds*1e-9
+        tstart_c = hc.epoch.gpsSeconds + hc.epoch.gpsNanoSeconds*1e-9
+        tp= np.arange(tstart_p, 0, hp.deltaT)
+        tp = tp[:len(hp.data.data)]
+        tc = np.arange(tstart_c, 0, hc.deltaT)
+        tc = tc[:len(hc.data.data)]
+        output_plus = np.vstack((tp, plus_data)).T
+        output_cross = np.vstack((tc, cross_data)).T
+
+        np.savetxt("plus_polarization_data.txt", output_plus, fmt="%f\t%e")
+        np.savetxt("cross_polarization_data.txt", output_cross, fmt="%f\t%e")
+
+
+        
 
     return (hp, hc)
 
