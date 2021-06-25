@@ -77,7 +77,7 @@ def make_tidal_waveform(approx='TaylorT4', rate=4096, Lambda1=None, Lambda2=None
 
     return (hp, hc)
 
-def make_waveform_plot(hp, hc, labels):
+def make_waveform_plot(hp, hc, labels, save=None):
     pl.rcParams.update({'font.size': 16})
     pl.figure(figsize=(12,8))
     if type(hp) != list:
@@ -88,9 +88,9 @@ def make_waveform_plot(hp, hc, labels):
     for x, y, thisLabel in zip(hp, hc, labels):
         tstart_p = x.epoch.gpsSeconds + x.epoch.gpsNanoSeconds*1e-9
         tstart_c = y.epoch.gpsSeconds + y.epoch.gpsNanoSeconds*1e-9
-        tp= np.arange(tstart_p, 0, x.deltaT)
+        tp= np.arange(tstart_p, 0+x.deltaT, x.deltaT)
         tp = tp[:len(x.data.data)]
-        tc = np.arange(tstart_c, 0, y.deltaT)
+        tc = np.arange(tstart_c, 0+y.deltaT, y.deltaT)
         tc = tc[:len(y.data.data)]
         ax1.plot(tp, x.data.data, '-', alpha=0.6, label=thisLabel)
         ax1.set_ylabel('Gravitational wave strain')
@@ -101,9 +101,27 @@ def make_waveform_plot(hp, hc, labels):
         ax2.set_ylabel('Gravitational wave strain')
         ax2.set_title("Cross polarization")
         ax2.legend()
+    
+    for s in (0,-0.5):
+        tstart_p = x.epoch.gpsSeconds + x.epoch.gpsNanoSeconds*1e-9
+        tstart_c = y.epoch.gpsSeconds + y.epoch.gpsNanoSeconds*1e-9
+        tp= np.arange(tstart_p, 0+x.deltaT, x.deltaT)
+        tp = tp[:len(x.data.data)]
+        tc = np.arange(tstart_c, 0+y.deltaT, y.deltaT)
+        tc = tc[:len(y.data.data)]
+        ax1.plot(tp, x.data.data, '-', alpha=0.6, label=thisLabel)
+        ax1.set_ylabel('Gravitational wave strain')
+        ax1.set_title("Plus polarization")
+        ax1.legend()
+
+        ax2.plot(tc, y.data.data, '-', alpha=0.6, label=thisLabel)
+        ax2.set_ylabel('Gravitational wave strain')
+        ax2.set_title("Cross polarization")
+        ax2.legend()
+   
     pl.xlabel('Time (s)')
-    pl.show()
-
-
-
+    if save is not None:
+        pl.savefig(save)
+    else:
+        pl.show()
 
