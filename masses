@@ -1,0 +1,157 @@
+#!/usr/bin/env python
+#  Copyright (C) 2009, 2012, 2021 Shaon Ghosh
+#
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with with program; see the file COPYING. If not, write to the
+#  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+#  MA  02111-1307  USA
+#
+import numpy as np
+import argparse
+import sys
+
+
+def get_lum_dist(z, N=1e6, H0=67.9, OmegaM=0.3065, OmegaL=0.6935):
+    """
+    Given redshift value this function computes the luminosity
+    distance by simple application of integral by Riemann sum
+    """
+    c = 299792458.0
+    z_grid = np.linspace(0, z, int(N))
+    dz = np.mean(np.diff(z_grid))
+    I = 1/np.sqrt(OmegaM*(1 + z_grid)**3 + OmegaL)
+    S = np.sum(I*dz)
+    return (c/1000)*(1+z)*S/H0
+
+
+def get_redshift(D_L, tol=0.001, H0=67.9, OmegaM=0.3065, OmegaL=0.6935):
+    """
+    Given a luminosity distance this function computes the redshift
+    using method of bisection.
+    """
+    z1 = 1
+    z2 = 10
+    D1 = get_lum_dist(z1, N=1e6, H0=H0, OmegaM=OmegaM, OmegaL=OmegaL)
+    D2 = get_lum_dist(z2, N=1e6, H0=H0, OmegaM=OmegaM, OmegaL=OmegaL)
+    while np.sign(D_L - D1) == np.sign(D_L - D2):
+        z1 /= 2
+        z2 *=2
+        D1 = get_lum_dist(z1, N=1e6, H0=H0, OmegaM=OmegaM, OmegaL=OmegaL)
+        D2 = get_lum_dist(z2, N=1e6, H0=H0, OmegaM=OmegaM, OmegaL=OmegaL)
+
+    z = (z1 + z2)/2
+    D = get_lum_dist(z, N=1e6, H0=H0, OmegaM=OmegaM, OmegaL=OmegaL)
+    while np.abs(D_L - D) > tol:
+        if D < D_L:
+            z1 = z
+        elif D > D_L:
+            z2 = z
+        z = (z1 + z2)/2
+        D = get_lum_dist(z, N=1e6, H0=H0, OmegaM=OmegaM, OmegaL=OmegaL)
+
+    return z
+
+def get_redshifted_mass(m, D_L, H0=67.9, OmegaM=0.3065, OmegaL=0.6935):
+    """
+    For a source at a given luminosity distance this function computes
+    the redshifted mass value
+    """
+    z = get_redshift(D_L, H0=H0, OmegaM=OmegaM, OmegaL=OmegaL)
+    return (1 + z)*m
+
+class masses:
+    def __init__(self, aa, bb):
+    	'''
+    	aa and bb could be masses or mass ratios
+    	'''
+    	self.aa = aa
+    	self.bb = bb
+    	self.c = 299792458.0 ## Speed of light
+    	self.G = 6.67408e-11 ## Gravitational constant
+    
+    
+    def mchirp(self):
+    	mc = ((self.aa*self.bb)**(3/5))/((self.aa + self.bb)**(1/5))
+    	return mc
+    
+    def eta(self):
+    	e = (self.aa*self.bb)/((self.aa + self.bb)**2)
+    	return e
+    
+    def getMasses(self):
+    	if args.eta:
+    		m1 = 0.5 * ( self.aa * (self.bb)**(-3/5) * (1 + np.sqrt(1 - 4*self.bb)) )
+    		m2 = 0.5 * ( self.aa * (self.bb)**(-3/5) * (1 - np.sqrt(1 - 4*self.bb)) )
+    	if args.qq:
+    		m1 = self.aa * (1 + self.bb)**(1/5) *(self.bb)**(2/5)
+    		m2 = self.aa * (1 + self.bb)**(1/5) *(self.bb)**(-3/5)
+    	return [m1, m2]
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--m1", action="store", type=float,
+                        help="Value of masss1 in solar mass")
+    parser.add_argument("--m2", action="store", type=float,
+                        help="Value of masss2 in solar mass")
+    parser.add_argument("--mc", action="store", type=float,
+                        help="Value of chirp mass in solar mass")
+    parser.add_argument("--eta", action="store", type=float,
+                        help="Value of eta")
+    parser.add_argument("-q", "--qq", action="store", type=float,
+                        help="Value of mass-ratio")
+    parser.add_argument("-m", action="store", type=float,
+                        help="Value of masss in solar mass")
+    parser.add_argument("-d", "--lum-dist", action="store", type=float,
+                        help="Luminosity distance in Mpc")
+
+
+    args = parser.parse_args()
+    
+    if args.m1 and args.m2:
+    	massObj = masses(args.m1, args.m2)
+    	print('Chirp mass = {} solar mass'.format(np.round(massObj.mchirp(), 2)))
+    	print('Eta = {}'.format(massObj.eta()))
+    
+    elif args.mc:
+    	if args.eta:
+    		massObj = masses(args.mc, args.eta)
+    		[mass1, mass2] = massObj.getMasses()
+    		mass_ratio = mass1/mass2
+    	elif args.qq:
+    		massObj = masses(args.mc, args.qq)
+    		[mass1, mass2] = massObj.getMasses()
+    		Eta = mass1*mass2/(mass1 + mass2)**2
+    
+    	else:
+    		print("Must give either eta or mass-ratio along with chirp mass... Exiting")
+    		sys.exit(1)
+    
+    	print("Mass 1 = {} solar mass".format(np.round(mass1, 2)))
+    	print("Mass 2 = {} solar mass".format(np.round(mass2, 2)))
+    	if args.eta:
+    		print("Mass-ratio (mass1/mass2) = {}".format(np.round(mass_ratio, 2)))
+    	if args.qq:
+    		print("Eta = {}".format(np.round(Eta, 2)))
+    	print("Total mass = {} solar mass".format(np.round(mass1 + mass2, 2)))
+
+    elif args.m and args.lum_dist:
+        m_redshited = get_redshifted_mass(args.m, args.lum_dist)
+        print("Redshifted mass in the detector frame = {}".format(m_redshited))
+
+
+    else:
+    	print('Need to supply exactly two mass values, or mass and distance... Exiting')
+    	sys.exit(1)
