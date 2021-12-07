@@ -88,9 +88,11 @@ def make_waveform_plot(hp, hc, labels):
     for x, y, thisLabel in zip(hp, hc, labels):
         tstart_p = x.epoch.gpsSeconds + x.epoch.gpsNanoSeconds*1e-9
         tstart_c = y.epoch.gpsSeconds + y.epoch.gpsNanoSeconds*1e-9
-        tp= np.arange(tstart_p, 0, x.deltaT)
+        tp = tstart_p + x.deltaT*np.arange(len(x.data.data))
+        # tp = np.arange(tstart_p, 0, x.deltaT)
         tp = tp[:len(x.data.data)]
-        tc = np.arange(tstart_c, 0, y.deltaT)
+        # tc = np.arange(tstart_c, 0, y.deltaT)
+        tc = tstart_c + y.deltaT*np.arange(len(y.data.data))
         tc = tc[:len(y.data.data)]
         ax1.plot(tp, x.data.data, '-', alpha=0.6, label=thisLabel)
         ax1.set_ylabel('Gravitational wave strain')
