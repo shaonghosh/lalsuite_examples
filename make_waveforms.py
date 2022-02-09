@@ -77,6 +77,37 @@ def make_tidal_waveform(approx='TaylorT4', rate=4096, Lambda1=None, Lambda2=None
 
     return (hp, hc)
 
+
+def get_hoft_strain(hp, hc, det, alpha, delta, psi, gpstime, gpstimenanoseconds, srate=4096):
+    """
+    METHOD: Given the hp and hc objects, the sky-position of the source, and its polarization
+    angle, its GPS time, and the sampling rate, this function produces the stain at a particular
+    detector.
+
+    PARAMETERS:
+    -----------
+    hp: GW plus polarization
+    hc: GW cross polarization
+    det: Name of the detector [eg: "H1", "L1", "V1"]
+    alpha: right ascension (radians)
+    delta: declination (radians)
+    psi: Polarization angle
+    gpstime: GPS time in seconds
+    gpstimenanoseconds: nanoseconds part of the GPS time
+    srate: Sampling rate (default: 4096)
+    """
+    geocent_end_time = gpstime + 1e-9 * gpstimenanoseconds
+    D = lalsim.DetectorPrefixToLALDetector(det)
+    hp.epoch += geocent_end_time
+    hc.epoch += geocent_end_time
+    h = lalsim.SimDetectorStrainREAL8TimeSeries(hp, hc, alpha, delta, psi, D)
+    t = h.epoch + np.arange(len(h.data.data)) / srate
+
+    pl.plot(t, h.data.data)
+    pl.show()
+
+    return (t, h)
+
 def make_waveform_plot(hp, hc, labels):
     pl.rcParams.update({'font.size': 16})
     pl.figure(figsize=(12,8))
